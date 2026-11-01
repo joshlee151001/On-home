@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>온 홈</title>
+<meta name="theme-color" content="#FF9F43">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="온 홈">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root {
+  --primary: #FF9F43; --primary-deep: #E8801F; --primary-light: #FFF1E2;
+  --bg: #F7F4F0; --card: #FFFFFF; --text: #1F1A14; --sub: #857B70; --line: #EFE8DF; --input: #F5F1EC;
+  --bad: #F04452; --good: #1E9E5A; --shadow: 0 6px 18px rgba(80,50,20,0.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --primary-light: #3A2A1A; --bg: #15120F; --card: #221D18; --text: #F3EEE8; --sub: #A39A90; --line: #2F2822; --input: #2B251F; --shadow: 0 6px 18px rgba(0,0,0,0.35); }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { min-height: 100%; }
+body { font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif; background: var(--bg); color: var(--text); overscroll-behavior-y: none; }
+button { font-family: inherit; border: none; background: none; color: inherit; cursor: pointer; }
+input { font-family: inherit; font-size: 16px; color: var(--text); }
+a { color: inherit; text-decoration: none; }
+.hidden { display: none !important; }
+
+/* ---------- 잠금 화면 ---------- */
+#lock { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; background: linear-gradient(180deg, #FFE3C4 0%, #FFF6EC 55%, var(--bg) 100%); z-index: 20; }
+@media (prefers-color-scheme: dark) { #lock { background: linear-gradient(180deg, #3A2614 0%, #1E1812 60%, var(--bg) 100%); } }
+.lock-box { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
+.logo { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 18px; }
+.logo img { width: 92px; height: 92px; border-radius: 26px; box-shadow: 0 14px 30px rgba(255,159,67,0.45); }
+.logo h1 { font-size: 32px; font-weight: 900; letter-spacing: -1px; }
+.logo h1 b { color: var(--primary); }
+.logo p { color: var(--sub); font-size: 14px; }
+.field { height: 54px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); padding: 0 16px; outline: none; width: 100%; }
+.field:focus { border-color: var(--primary); }
+.btn { height: 52px; border-radius: 14px; background: var(--primary); color: #fff; font-size: 17px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 18px; }
+.btn:disabled { opacity: 0.45; }
+.btn.gray { background: var(--input); color: var(--sub); }
+.btn.red { background: var(--bad); }
+.btn.block { width: 100%; }
+.msg { color: var(--bad); font-size: 13px; text-align: center; min-height: 18px; line-height: 1.5; }
+.shake { animation: shake 0.35s; }
+@keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+
+/* ---------- 홈 ---------- */
+#home { max-width: 760px; margin: 0 auto; padding: calc(18px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom)); }
+.top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+.hello { flex: 1; min-width: 0; }
+.hello .date { font-size: 13px; color: var(--sub); font-weight: 700; }
+.hello h2 { font-size: 24px; font-weight: 900; margin-top: 4px; letter-spacing: -0.5px; }
+.clock { font-size: 40px; font-weight: 900; letter-spacing: -1.5px; font-variant-numeric: tabular-nums; margin-top: 2px; color: var(--primary-deep); }
+.icon-btn { width: 42px; height: 42px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow); font-size: 19px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.icon-btn.on { background: var(--primary); color: #fff; }
+.search { position: relative; margin-bottom: 18px; }
+.search input { width: 100%; height: 48px; border-radius: 14px; border: none; background: var(--card); box-shadow: var(--shadow); padding: 0 16px 0 44px; outline: none; }
+.search span { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); font-size: 17px; opacity: 0.6; }
+.edit-bar { background: var(--primary-light); color: var(--primary-deep); border-radius: 14px; padding: 11px 14px; font-size: 13px; font-weight: 700; margin-bottom: 14px; line-height: 1.5; }
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (min-width: 560px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 760px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+.card { position: relative; background: var(--card); border-radius: 22px; padding: 16px 14px 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; min-height: 150px; transition: transform 0.12s; overflow: hidden; }
+.card:active { transform: scale(0.96); }
+.card .ic { width: 56px; height: 56px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+.card .nm { font-size: 16px; font-weight: 900; line-height: 1.25; word-break: keep-all; }
+.card .ds { font-size: 12px; color: var(--sub); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card .dm { font-size: 10px; color: var(--sub); opacity: 0.8; margin-top: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .glow { position: absolute; right: -30px; top: -30px; width: 100px; height: 100px; border-radius: 50%; opacity: 0.18; pointer-events: none; }
+.editing .card { animation: wiggle 0.5s ease-in-out infinite alternate; }
+.editing .card:nth-child(2n) { animation-delay: 0.15s; }
+@keyframes wiggle { from { transform: rotate(-0.8deg); } to { transform: rotate(0.8deg); } }
+.tools { display: none; gap: 6px; margin-top: 4px; }
+.editing .tools { display: flex; }
+.tools button { flex: 1; height: 34px; border-radius: 10px; background: var(--input); font-size: 14px; font-weight: 800; }
+.tools button.del { background: #FFE9EB; color: var(--bad); }
+@media (prefers-color-scheme: dark) { .tools button.del { background: #3A1E21; } }
+.add-card { border: 2.5px dashed var(--line); background: transparent; box-shadow: none; align-items: center; justify-content: center; color: var(--sub); font-weight: 800; font-size: 15px; animation: none !important; }
+.add-card .plus { width: 52px; height: 52px; border-radius: 50%; background: var(--primary-light); color: var(--primary-deep); font-size: 30px; display: flex; align-items: center; justify-content: center; }
+.empty { text-align: center; color: var(--sub); padding: 40px 10px; line-height: 1.7; font-size: 14px; }
+.foot { text-align: center; color: var(--sub); font-size: 12px; margin-top: 26px; }
+
+/* ---------- 시트 ---------- */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 30; display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; background: var(--card); border-radius: 24px 24px 0 0; padding: 20px 18px calc(20px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; animation: up 0.2s ease-out; }
+@media (min-width: 560px) { .overlay { align-items: center; } .sheet { border-radius: 24px; } }
+@keyframes up { from { transform: translateY(40px); opacity: 0.5; } }
+.sheet h3 { font-size: 20px; font-weight: 900; }
+.sheet > * { flex-shrink: 0; }
+.lbl { font-size: 13px; font-weight: 800; color: var(--sub); margin-bottom: -4px; }
+.emojis { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+.emojis button { aspect-ratio: 1; border-radius: 12px; background: var(--input); font-size: 22px; }
+.emojis button.on { outline: 3px solid var(--primary); }
+.colors { display: flex; gap: 8px; flex-wrap: wrap; }
+.colors button { width: 38px; height: 38px; border-radius: 50%; border: 3px solid transparent; }
+.colors button.on { border-color: var(--text); }
+.preview { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 16px; background: var(--input); }
+.preview .ic { width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+.preview b { display: block; font-size: 15px; }
+.preview span { font-size: 12px; color: var(--sub); word-break: break-all; }
+.row-btns { display: flex; gap: 8px; }
+.row-btns .btn { flex: 1; }
+.menu-btn { display: flex; align-items: center; gap: 12px; padding: 15px 4px; border-bottom: 1px solid var(--line); font-size: 15px; font-weight: 700; width: 100%; text-align: left; }
+.menu-btn:last-child { border-bottom: none; }
+.menu-btn .mi { font-size: 20px; width: 28px; text-align: center; }
+.hint { font-size: 13px; color: var(--sub); line-height: 1.6; }
+.toast { position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top)); transform: translateX(-50%); background: rgba(31,26,20,0.92); color: #fff; padding: 11px 18px; border-radius: 20px; font-size: 14px; font-weight: 700; z-index: 50; max-width: 90%; text-align: center; pointer-events: none; }
+.toast.ok { background: var(--good); }
+.toast.err { background: var(--bad); }
+.sync { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 5px; vertical-align: middle; }
+.sync.off { background: #C9C0B5; }
+</style>
+</head>
+<body>
+
+<!-- 잠금 화면 -->
+<div id="lock">
+  <div class="lock-box">
+    <div class="logo">
+      <img src="icon-192.png" alt="">
+      <h1>온 <b>홈</b></h1>
+      <p>내가 만든 홈페이지 모음</p>
+    </div>
+    <input id="pw" class="field" type="password" placeholder="비밀번호" autocomplete="current-password">
+    <div id="lock-msg" class="msg"></div>
+    <button id="unlock" class="btn block" type="button">들어가기</button>
+  </div>
+</div>
+
+<!-- 홈 -->
+<div id="home" class="hidden">
+  <div class="top">
+    <div class="hello">
+      <div class="date" id="date"></div>
+      <div class="clock" id="clock"></div>
+      <h2 id="greet"></h2>
+    </div>
+    <button id="btn-edit" class="icon-btn" type="button" aria-label="편집">✏️</button>
+    <button id="btn-menu" class="icon-btn" type="button" aria-label="설정">⚙️</button>
+  </div>
+  <div class="search"><span>🔍</span><input id="q" type="search" placeholder="홈페이지 찾기"></div>
+  <div id="edit-bar" class="edit-bar hidden">✏️ 편집 중이에요 · ◀ ▶로 순서 바꾸기, ✏️로 고치기, 🗑️로 지우기<br>다 했으면 위의 ✅를 눌러요</div>
+  <div id="grid" class="grid"></div>
+  <div class="foot"><span id="sync" class="sync off"></span><span id="sync-text">연결 중…</span></div>
+</div>
+
+<div id="overlay" class="overlay hidden"><div id="sheet" class="sheet"></div></div>
+<div id="toast" class="toast hidden"></div>
+
+<!-- Firebase (온챗 프로젝트의 Realtime Database "onhome" 칸) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-database.js";
+try {
+  const app = initializeApp({
+    apiKey: "AIzaSyDtaB6Me_uGpgZaW6ca4p6NVk_TEbxO6IA",
+    authDomain: "onchat-fc78e.firebaseapp.com",
+    databaseURL: "https://onchat-fc78e-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "onchat-fc78e",
+    appId: "1:939252436157:web:d8a55283aa9c17fa6e3bd4",
+  });
+  const db = getDatabase(app);
+  window.ohRemote = {
+    get: (path) => get(ref(db, "onhome/" + path)).then((s) => s.val()),
+    put: (path, v) => set(ref(db, "onhome/" + path), v),
+    listen: (path, cb) => onValue(ref(db, "onhome/" + path), (s) => cb(s.val()), () => cb(undefined)),
+    onConn: (cb) => onValue(ref(db, ".info/connected"), (s) => cb(!!s.val())),
+  };
+  window.dispatchEvent(new Event("ohremote-ready"));
+} catch (e) { console.warn("서버 연결 실패", e); }
+</script>
+
+<script>
+"use strict";
+/* =====================================================================
+   온 홈 : 내가 만든 홈페이지 모음
+   - 비밀번호는 그대로 저장하지 않고 SHA-256으로 바꾼 값(열쇠)만 써요
+   - 홈페이지 목록은 onhome/vaults/{열쇠} 에 저장 → 비밀번호를 아는 사람만 열 수 있어요
+   ===================================================================== */
+const $ = (id) => document.getElementById(id);
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+// 처음 비밀번호의 열쇠 (비밀번호 자체는 코드에 없어요)
+const DEFAULT_KEY = "f8546a3b29b775b26c75e7581274312ace8603cfda959d507f4c890e5e04f2cb";
+const BASE = "https://joshlee151001.github.io";
+const DEFAULT_SITES = [
+  { name: "온챗", url: BASE + "/On-CHAT/", icon: "💬", color: "#FF9F43", desc: "우리 가족 메신저 · 톡챗 통화" },
+  { name: "TJ-mart 키오스크", url: BASE + "/TJ-mart/", icon: "🛒", color: "#2D7FE0", desc: "셀프 계산대" },
+  { name: "TJ-mart 직원 화면", url: BASE + "/TJ-mart/?staff", icon: "🧑‍💼", color: "#4F86E3", desc: "직원 호출 알림 받기" },
+  { name: "On-stock", url: BASE + "/On-stock/", icon: "📈", color: "#F04452", desc: "주식 모의 투자" },
+  { name: "On-city", url: BASE + "/On-city/", icon: "🏙️", color: "#1E9E5A", desc: "진짜 시간으로 자라는 블록 도시" },
+];
+const EMOJIS = ["💬", "🛒", "📈", "🏙️", "🏠", "🎮", "🎵", "📚", "📝", "📷", "🎨", "⚽", "🍔", "🐶", "🚀", "⭐", "💰", "🧑‍💼", "📅", "🗺️", "🔧", "🎬", "🌐", "❤️"];
+const COLORS = ["#FF9F43", "#F04452", "#FF6B9D", "#B26BFF", "#4F86E3", "#2D7FE0", "#16B5C9", "#1E9E5A", "#8BC34A", "#F7B500", "#8D6E63", "#5F6B7A"];
+
+let key = "";
+let sites = [];
+let editing = false;
+let unlisten = null;
+
+async function sha(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+const keyOf = (pw) => sha("onhome:" + pw);
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+let toastTimer = null;
+function toast(text, kind = "") {
+  const t = $("toast");
+  t.textContent = text; t.className = "toast " + kind;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add("hidden"), 2200);
+}
+function openSheet(build) { $("sheet").replaceChildren(); build($("sheet")); $("overlay").classList.remove("hidden"); }
+function closeSheet() { $("overlay").classList.add("hidden"); }
+$("overlay").addEventListener("click", (e) => { if (e.target === $("overlay")) closeSheet(); });
+
+function waitRemote(timeout = 6000) {
+  return new Promise((res) => {
+    if (window.ohRemote) return res(true);
+    const t = setTimeout(() => res(false), timeout);
+    window.addEventListener("ohremote-ready", () => { clearTimeout(t); res(true); }, { once: true });
+  });
+}
+function local(k, v) {
+  try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; }
+}
+function toList(v) {
+  if (!v) return [];
+  const arr = Array.isArray(v) ? v : Object.values(v);
+  return arr.filter(Boolean).map((s) => ({ id: s.id || newId(), name: s.name || "", url: s.url || "", icon: s.icon || "🌐", color: s.color || "#FF9F43", desc: s.desc || "" }));
+}
+
+/* ---------------- 잠금 ---------------- */
+async function unlock() {
+  const pw = $("pw").value;
+  $("lock-msg").textContent = "";
+  if (!pw) return fail("비밀번호를 넣어 주세요");
+  $("unlock").disabled = true;
+  try {
+    if (!(await waitRemote())) return fail("인터넷 연결을 확인해 주세요");
+    const k = await keyOf(pw);
+    const vault = await window.ohRemote.get("vaults/" + k);
+    if (vault && vault.moved) return fail("비밀번호가 틀렸어요");
+    if (!vault) {
+      if (k !== DEFAULT_KEY) return fail("비밀번호가 틀렸어요");
+      // 처음 들어올 때: 기본 홈페이지 5개로 시작
+      await window.ohRemote.put("vaults/" + k, { sites: DEFAULT_SITES.map((s) => ({ ...s, id: newId() })), updatedAt: Date.now() });
+    }
+    local("onhome-key", k);
+    enter(k);
+  } catch (e) {
+    console.warn(e);
+    fail("연결에 문제가 있어요. 잠시 뒤에 다시 해 주세요");
+  } finally {
+    $("unlock").disabled = false;
+  }
+}
+function fail(text) {
+  $("lock-msg").textContent = text;
+  const box = document.querySelector(".lock-box");
+  box.classList.remove("shake"); void box.offsetWidth; box.classList.add("shake");
+  $("unlock").disabled = false;
+}
+$("unlock").onclick = unlock;
+$("pw").addEventListener("keydown", (e) => e.key === "Enter" && unlock());
+
+function enter(k) {
+  key = k;
+  $("pw").value = "";
+  $("lock").classList.add("hidden");
+  $("home").classList.remove("hidden");
+  const cached = local("onhome-cache-" + k);
+  if (cached) { try { sites = toList(JSON.parse(cached)); } catch (e) { sites = []; } }
+  render();
+  if (unlisten) unlisten();
+  unlisten = window.ohRemote.listen("vaults/" + k, (v) => {
+    if (v === undefined) return;
+    if (!v || v.moved) { // 다른 기기에서 비밀번호를 바꿨어요
+      toast("비밀번호가 바뀌었어요. 다시 로그인해 주세요", "err");
+      return lockNow();
+    }
+    sites = toList(v.sites);
+    local("onhome-cache-" + k, JSON.stringify(sites));
+    render();
+  });
+}
+function lockNow() {
+  if (unlisten) { unlisten(); unlisten = null; }
+  if (key) local("onhome-cache-" + key, null);
+  local("onhome-key", null);
+  key = ""; sites = []; editing = false;
+  closeSheet();
+  $("home").classList.add("hidden");
+  $("lock").classList.remove("hidden");
+}
+function save() {
+  local("onhome-cache-" + key, JSON.stringify(sites));
+  return window.ohRemote.put("vaults/" + key, { sites: sites.map((s) => ({ ...s })), updatedAt: Date.now() })
+    .catch(() => toast("저장하지 못했어요 (인터넷 확인)", "err"));
+}
+
+/* ---------------- 홈 화면 ---------------- */
+function tick() {
+  const d = new Date();
+  const h = d.getHours();
+  $("clock").textContent = `${String(h).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  $("date").textContent = `${d.getMonth() + 1}월 ${d.getDate()}일 ${"일월화수목금토"[d.getDay()]}요일`;
+  $("greet").textContent = h < 6 ? "늦은 밤이에요 🌙" : h < 11 ? "좋은 아침이에요 ☀️" : h < 14 ? "점심 맛있게 먹어요 🍚" : h < 18 ? "좋은 오후예요 🌤️" : h < 22 ? "좋은 저녁이에요 🌆" : "오늘도 수고했어요 🌙";
+}
+tick();
+setInterval(tick, 10000);
+
+function hostOf(url) { try { const u = new URL(url); return u.host + (u.pathname !== "/" ? u.pathname : "") + u.search; } catch (e) { return url; } }
+function render() {
+  const grid = $("grid");
+  grid.replaceChildren();
+  grid.classList.toggle("editing", editing);
+  $("btn-edit").textContent = editing ? "✅" : "✏️";
+  $("btn-edit").classList.toggle("on", editing);
+  $("edit-bar").classList.toggle("hidden", !editing);
+  const q = $("q").value.trim().toLowerCase();
+  const list = sites.filter((s) => !q || (s.name + " " + s.desc + " " + s.url).toLowerCase().includes(q));
+  if (!list.length && !editing) {
+    grid.append(el("div", "empty", q ? "찾는 홈페이지가 없어요" : "아직 홈페이지가 없어요.\n✏️를 눌러서 추가해 보세요!"));
+    grid.lastChild.style.gridColumn = "1 / -1";
+    grid.lastChild.style.whiteSpace = "pre-line";
+  }
+  for (const s of list) {
+    const card = el(editing ? "div" : "a", "card");
+    if (!editing) { card.href = s.url; card.target = "_blank"; card.rel = "noopener"; }
+    const glow = el("div", "glow"); glow.style.background = s.color;
+    const ic = el("div", "ic", s.icon); ic.style.background = s.color + "26";
+    card.append(glow, ic, el("div", "nm", s.name));
+    if (s.desc) card.append(el("div", "ds", s.desc));
+    card.append(el("div", "dm", hostOf(s.url)));
+    const tools = el("div", "tools");
+    const i = sites.indexOf(s);
+    const tb = (text, fn, cls) => { const b = el("button", cls || "", text); b.type = "button"; b.onclick = (e) => { e.preventDefault(); e.stopPropagation(); fn(); }; tools.append(b); };
+    tb("◀", () => move(i, -1));
+    tb("✏️", () => openForm(s));
+    tb("🗑️", () => askDelete(s), "del");
+    tb("▶", () => move(i, 1));
+    card.append(tools);
+    grid.append(card);
+  }
+  if (editing) {
+    const add = el("button", "card add-card");
+    add.type = "button";
+    add.append(el("div", "plus", "+"), el("div", null, "홈페이지 추가"));
+    add.onclick = () => openForm(null);
+    grid.append(add);
+  }
+}
+$("q").addEventListener("input", render);
+$("btn-edit").onclick = () => { editing = !editing; render(); };
+function move(i, d) {
+  const j = i + d;
+  if (j < 0 || j >= sites.length) return;
+  [sites[i], sites[j]] = [sites[j], sites[i]];
+  render();
+  save();
+}
+
+/* ---------------- 추가 · 고치기 ---------------- */
+function normUrl(u) {
+  u = u.trim();
+  if (!u) return "";
+  if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+  try { const x = new URL(u); if (!x.hostname.includes(".") && x.hostname !== "localhost") return ""; return x.href; } catch (e) { return ""; }
+}
+function openForm(site) {
+  const f = site ? { ...site } : { name: "", url: "", desc: "", icon: "🌐", color: COLORS[sites.length % COLORS.length] };
+  openSheet((sh) => {
+    sh.append(el("h3", null, site ? "✏️ 홈페이지 고치기" : "➕ 홈페이지 추가"));
+    const msg = el("div", "msg");
+    const pv = el("div", "preview");
+    const pic = el("div", "ic");
+    const ptxt = el("div");
+    pv.append(pic, ptxt);
+    const upd = () => {
+      pic.textContent = f.icon; pic.style.background = f.color + "26";
+      ptxt.replaceChildren(el("b", null, f.name || "이름"), el("span", null, normUrl(f.url) || "주소"));
+    };
+    sh.append(pv);
+    const inp = (label, k, ph, type = "text", max = 60) => {
+      sh.append(el("div", "lbl", label));
+      const i = el("input", "field");
+      i.type = type; i.placeholder = ph; i.value = f[k]; i.maxLength = max;
+      i.autocapitalize = "off";
+      i.oninput = () => { f[k] = i.value; msg.textContent = ""; upd(); };
+      sh.append(i);
+      return i;
+    };
+    const nameIn = inp("이름", "name", "예: 온챗", "text", 24);
+    const urlIn = inp("주소", "url", "예: joshlee151001.github.io/On-CHAT/", "url", 300);
+    inp("설명 (안 써도 돼요)", "desc", "예: 우리 가족 메신저", "text", 50);
+    sh.append(el("div", "lbl", "아이콘"));
+    const em = el("div", "emojis");
+    const drawEm = () => {
+      em.replaceChildren();
+      for (const e of EMOJIS) {
+        const b = el("button", e === f.icon ? "on" : "", e);
+        b.type = "button";
+        b.onclick = () => { f.icon = e; drawEm(); upd(); };
+        em.append(b);
+      }
+    };
+    drawEm();
+    sh.append(em);
+    const own = el("input", "field");
+    own.placeholder = "다른 이모티콘 직접 넣기 (예: 🦊)";
+    own.maxLength = 8;
+    own.oninput = () => { const v = [...own.value.trim()].slice(0, 4).join(""); if (v) { f.icon = v; drawEm(); upd(); } };
+    sh.append(own);
+    sh.append(el("div", "lbl", "색"));
+    const cl = el("div", "colors");
+    const drawCl = () => {
+      cl.replaceChildren();
+      for (const c of COLORS) {
+        const b = el("button", c === f.color ? "on" : "");
+        b.type = "button"; b.style.background = c;
+        b.onclick = () => { f.color = c; drawCl(); upd(); };
+        cl.append(b);
+      }
+    };
+    drawCl();
+    sh.append(cl);
+    sh.append(msg);
+    const row = el("div", "row-btns");
+    const cancel = el("button", "btn gray", "취소"); cancel.type = "button"; cancel.onclick = closeSheet;
+    const ok = el("button", "btn", site ? "저장" : "추가"); ok.type = "button";
+    ok.onclick = () => {
+      const name = f.name.trim(), url = normUrl(f.url);
+      if (!name) { msg.textContent = "이름을 적어 주세요"; nameIn.focus(); return; }
+      if (!url) { msg.textContent = "주소를 확인해 주세요 (예: joshlee151001.github.io/On-CHAT/)"; urlIn.focus(); return; }
+      const item = { id: site ? site.id : newId(), name, url, desc: f.desc.trim(), icon: f.icon, color: f.color };
+      if (site) sites = sites.map((s) => (s.id === site.id ? item : s));
+      else sites.push(item);
+      closeSheet();
+      render();
+      save();
+      toast(site ? "저장했어요" : `${name} 추가했어요`, "ok");
+    };
+    row.append(cancel, ok);
+    sh.append(row);
+    upd();
+    if (!site) setTimeout(() => nameIn.focus(), 250);
+  });
+}
+function askDelete(site) {
+  openSheet((sh) => {
+    sh.append(el("h3", null, `🗑️ ${site.name} 지울까요?`), el("div", "hint", "온 홈 목록에서만 지워져요. 홈페이지 자체는 그대로 있어요."));
+    const row = el("div", "row-btns");
+    const no = el("button", "btn gray", "아니요"); no.type = "button"; no.onclick = closeSheet;
+    const yes = el("button", "btn red", "지우기"); yes.type = "button";
+    yes.onclick = () => { sites = sites.filter((s) => s.id !== site.id); closeSheet(); render(); save(); toast("지웠어요"); };
+    row.append(no, yes);
+    sh.append(row);
+  });
+}
+
+/* ---------------- 설정 ---------------- */
+$("btn-menu").onclick = () => openSheet((sh) => {
+  sh.append(el("h3", null, "⚙️ 설정"));
+  const btn = (ic, text, fn) => { const b = el("button", "menu-btn"); b.type = "button"; b.append(el("span", "mi", ic), el("span", null, text)); b.onclick = fn; sh.append(b); };
+  btn("🔑", "비밀번호 바꾸기", changePw);
+  btn("✏️", editing ? "편집 끝내기" : "홈페이지 추가·지우기·순서 바꾸기", () => { closeSheet(); editing = !editing; render(); });
+  btn("🔒", "잠그기 (로그아웃)", () => { lockNow(); toast("잠갔어요 🔒"); });
+});
+function changePw() {
+  openSheet((sh) => {
+    sh.append(el("h3", null, "🔑 비밀번호 바꾸기"), el("div", "hint", "바꾸면 다른 기기에서도 새 비밀번호로 다시 들어가야 해요."));
+    const mk = (ph, ac) => { const i = el("input", "field"); i.type = "password"; i.placeholder = ph; i.autocomplete = ac; sh.append(i); return i; };
+    const cur = mk("지금 비밀번호", "current-password");
+    const n1 = mk("새 비밀번호 (6자 이상)", "new-password");
+    const n2 = mk("새 비밀번호 한 번 더", "new-password");
+    const msg = el("div", "msg");
+    sh.append(msg);
+    const ok = el("button", "btn block", "바꾸기"); ok.type = "button";
+    ok.onclick = async () => {
+      msg.textContent = "";
+      if ((await keyOf(cur.value)) !== key) return (msg.textContent = "지금 비밀번호가 틀렸어요");
+      if (n1.value.length < 6) return (msg.textContent = "새 비밀번호는 6자 이상이에요");
+      if (n1.value !== n2.value) return (msg.textContent = "새 비밀번호가 서로 달라요");
+      const nk = await keyOf(n1.value);
+      if (nk === key) return (msg.textContent = "지금이랑 같은 비밀번호예요");
+      ok.disabled = true;
+      try {
+        const exist = await window.ohRemote.get("vaults/" + nk);
+        if (exist && !exist.moved) { ok.disabled = false; return (msg.textContent = "다른 비밀번호를 써 주세요"); }
+        const old = key;
+        await window.ohRemote.put("vaults/" + nk, { sites: sites.map((s) => ({ ...s })), updatedAt: Date.now() });
+        if (unlisten) { unlisten(); unlisten = null; }
+        await window.ohRemote.put("vaults/" + old, { moved: true, updatedAt: Date.now() }); // 예전 비밀번호는 이제 안 열려요
+        local("onhome-cache-" + old, null);
+        local("onhome-key", nk);
+        closeSheet();
+        enter(nk);
+        toast("비밀번호를 바꿨어요 🔑", "ok");
+      } catch (e) {
+        ok.disabled = false;
+        msg.textContent = "바꾸지 못했어요. 인터넷을 확인해 주세요";
+      }
+    };
+    sh.append(ok);
+    setTimeout(() => cur.focus(), 250);
+  });
+}
+
+/* ---------------- 시작 ---------------- */
+(async () => {
+  const saved = local("onhome-key");
+  if (!(await waitRemote())) { $("lock-msg").textContent = "서버에 연결하지 못했어요. 인터넷을 확인해 주세요"; return; }
+  window.ohRemote.onConn((on) => {
+    $("sync").classList.toggle("off", !on);
+    $("sync-text").textContent = on ? "모든 기기에서 똑같이 보여요" : "인터넷 연결 안 됨 · 저장해 둔 목록을 보여줘요";
+  });
+  if (saved) enter(saved);
+})();
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
